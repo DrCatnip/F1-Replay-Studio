@@ -37,3 +37,26 @@ class LeaderboardPanel(QWidget):
                 label.setText(f"{position + 1:02d}  {drivers[position]}")
             else:
                 label.setText(f"{position + 1:02d}  --")
+
+    def update_rows(self, rows: list[dict[str, object]], selected_driver: str = "") -> None:
+        if not rows:
+            return self.update_drivers([])
+        for index, label in enumerate(self.labels):
+            if index >= len(rows):
+                label.setText(f"{index + 1:02d}  --")
+                continue
+            row = rows[index]
+            driver = str(row.get("driver", "—"))
+            position = row.get("position") or index + 1
+            team = str(row.get("team", "—"))
+            gap = _format_gap(row.get("gap"))
+            label.setText(f"{position:>2}  {driver:<3}  {team}  {gap}")
+            label.setProperty("selected", driver == selected_driver)
+            label.style().unpolish(label)
+            label.style().polish(label)
+
+
+def _format_gap(value: object) -> str:
+    if value is None or str(value) in {"NaT", "nan"}:
+        return "—"
+    return str(value).replace("0 days ", "")

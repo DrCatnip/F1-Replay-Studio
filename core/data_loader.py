@@ -1,6 +1,10 @@
-import fastf1
+"""Legacy compatibility entry point.
 
-fastf1.Cache.enable_cache("cache")
+New code should use :class:`core.session_loader.SessionLoader`; this helper
+keeps older integrations on the same FastF1 service and cache boundary.
+"""
+
+from services.fastf1_service import FastF1Service
 
 
 def load_session(
@@ -8,12 +12,4 @@ def load_session(
     grand_prix,
     session_type
 ):
-    session = fastf1.get_session(
-        year,
-        grand_prix,
-        session_type
-    )
-
-    session.load()
-
-    return session
+    return FastF1Service().load_session(year, grand_prix, session_type)

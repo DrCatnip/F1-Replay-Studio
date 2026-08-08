@@ -22,7 +22,7 @@ class CarRenderer:
 
         color = DRIVER_COLORS.get(
             driver,
-            "black"
+            "#98A2B3"
         )
 
         car, = self.axis.plot(

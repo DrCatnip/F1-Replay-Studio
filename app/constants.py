@@ -20,9 +20,12 @@ CACHE_FOLDER = "cache"
 # Default Session
 # ============================================================
 
-DEFAULT_YEAR = 2024
-DEFAULT_EVENT = "Monaco"
-DEFAULT_SESSION = "Q"
+# A season is only a preference. Events and sessions are always discovered from
+# the data provider; keeping no event/session default prevents stale calendar
+# assumptions from leaking into the UI.
+DEFAULT_YEAR = 2026
+DEFAULT_EVENT = ""
+DEFAULT_SESSION = ""
 
 # ============================================================
 # Theme

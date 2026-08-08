@@ -27,6 +27,7 @@ class LoadedSession:
     replay_controller: ReplayController
     telemetry_engine: TelemetryEngine
     leaderboard_engine: LeaderboardEngine
+    leaderboard_rows: list[dict[str, object]]
 
 
 class SessionLoader:
@@ -80,15 +81,19 @@ class SessionLoader:
                 lap
             )
 
+            if not len(pos_data.times_ms):
+                continue
+
             driver_data[
                 driver
             ] = pos_data
 
-            telemetry_data[
-                driver
-            ] = self.telemetry_service.telemetry_for_lap(
-                lap
-            )
+            try:
+                telemetry_data[driver] = self.telemetry_service.telemetry_for_lap(lap)
+            except Exception:
+                # Position replay remains useful when a provider exposes no
+                # car telemetry for an otherwise valid session.
+                pass
 
             if reference_track is None:
                 reference_track = pos_data
@@ -97,6 +102,9 @@ class SessionLoader:
             driver_data
         )
 
+        # Drivers without valid positional samples cannot be rendered; retain
+        # metadata separately but keep the replay engine internally coherent.
+        drivers = list(driver_data)
         replay_controller = ReplayController(
             driver_data=driver_data,
             start_time=start_time,
@@ -118,5 +126,6 @@ class SessionLoader:
             ),
             leaderboard_engine=LeaderboardEngine(
                 drivers
-            )
+            ),
+            leaderboard_rows=self.fastf1_service.leaderboard_rows(session),
         )

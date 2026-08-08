@@ -27,3 +27,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(
             self.workspace
         )
+
+    def closeEvent(self, event) -> None:
+        self.workspace.shutdown()
+        super().closeEvent(event)

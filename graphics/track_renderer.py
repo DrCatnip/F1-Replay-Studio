@@ -21,6 +21,7 @@ class TrackRenderer:
         self.car_renderer = CarRenderer(
             self.axis
         )
+        self._base_limits: tuple[tuple[float, float], tuple[float, float]] | None = None
 
     def widget(self):
         return self.canvas
@@ -29,15 +30,20 @@ class TrackRenderer:
         self,
         reference_track,
         drivers: list[str],
-        title: str = "Monaco Session Replay"
+        title: str = "Session Replay"
     ) -> None:
 
         self.axis.clear()
 
         if reference_track is not None:
+            x = getattr(reference_track, "x", None)
+            y = getattr(reference_track, "y", None)
+            if x is None:
+                x = reference_track["X"]
+                y = reference_track["Y"]
             self.axis.plot(
-                reference_track["X"],
-                reference_track["Y"],
+                x,
+                y,
                 alpha=0.3
             )
 
@@ -48,6 +54,7 @@ class TrackRenderer:
         self.axis.set_title(
             title
         )
+        self._base_limits = (self.axis.get_xlim(), self.axis.get_ylim())
 
         self.car_renderer = CarRenderer(
             self.axis
@@ -76,16 +83,23 @@ class TrackRenderer:
                 driver_state.selected
             )
 
+        selected = next((state for state in frame.drivers if state.selected), None)
+        if self.camera.follow_driver and selected is not None:
+            self._focus_on(selected.x, selected.y)
+
         self.canvas.draw_idle()
 
     def zoom_in(self) -> None:
         self.camera.zoom_in()
+        self._apply_zoom()
 
     def zoom_out(self) -> None:
         self.camera.zoom_out()
+        self._apply_zoom()
 
     def reset_camera(self) -> None:
         self.camera.reset()
+        self._apply_zoom()
 
     def set_follow_driver(
         self,
@@ -95,3 +109,30 @@ class TrackRenderer:
         self.camera.set_follow_driver(
             enabled
         )
+
+    def _apply_zoom(self) -> None:
+        if self._base_limits is None:
+            return
+        x_limits, y_limits = self._base_limits
+        x_center = sum(x_limits) / 2
+        y_center = sum(y_limits) / 2
+        self._set_limits(x_center, y_center)
+        self.canvas.draw_idle()
+
+    def _focus_on(self, x: float, y: float) -> None:
+        # Matplotlib does not provide a camera object; interpolating the axes
+        # centre gives this backend a light-weight smooth follow behaviour.
+        current_x = self.axis.get_xlim()
+        current_y = self.axis.get_ylim()
+        center_x = (current_x[0] + current_x[1]) / 2 + (x - (current_x[0] + current_x[1]) / 2) * 0.14
+        center_y = (current_y[0] + current_y[1]) / 2 + (y - (current_y[0] + current_y[1]) / 2) * 0.14
+        self._set_limits(center_x, center_y)
+
+    def _set_limits(self, x_center: float, y_center: float) -> None:
+        if self._base_limits is None:
+            return
+        x_limits, y_limits = self._base_limits
+        width = (x_limits[1] - x_limits[0]) / self.camera.zoom_level
+        height = (y_limits[1] - y_limits[0]) / self.camera.zoom_level
+        self.axis.set_xlim(x_center - width / 2, x_center + width / 2)
+        self.axis.set_ylim(y_center - height / 2, y_center + height / 2)

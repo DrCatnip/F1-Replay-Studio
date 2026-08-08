@@ -14,6 +14,10 @@ class InterpolationEngine:
         timestamp: pd.Timedelta
     ) -> tuple[float, float] | None:
 
+        position_at = getattr(data, "position_at", None)
+        if callable(position_at):
+            return position_at(timestamp)
+
         rows = data[
             data["SessionTime"]
             <= timestamp

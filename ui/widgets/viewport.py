@@ -32,7 +32,7 @@ class Viewport(QWidget):
 
         self.driver_badge = StatusBadge("Driver --")
 
-        self.session_label = QLabel("Monaco GP - Qualifying - 2024")
+        self.session_label = QLabel("Select a session to begin")
         self.session_label.setObjectName("ViewportSubtitle")
 
         header_layout.addWidget(self.title_label)
@@ -116,3 +116,6 @@ class Viewport(QWidget):
         status: str
     ) -> None:
         self.status_badge.set_status(status)
+
+    def setFps(self, fps: int) -> None:
+        self.fps_badge.set_status(f"{fps} FPS")

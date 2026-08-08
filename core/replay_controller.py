@@ -56,8 +56,8 @@ class ReplayController:
         driver_data: Mapping[str, object],
         start_time: pd.Timedelta,
         end_time: pd.Timedelta,
-        selected_driver: str = "LEC",
-        tick_milliseconds: int = 100
+        selected_driver: str = "",
+        tick_milliseconds: int = 33
     ) -> None:
 
         self.driver_data = dict(driver_data)
@@ -101,6 +101,11 @@ class ReplayController:
         self.clock.seek_progress(
             progress
         )
+
+    def seek(self, timestamp: pd.Timedelta) -> None:
+        duration = self.clock.end_time - self.clock.start_time
+        if duration.total_seconds() > 0:
+            self.seek_progress((timestamp - self.clock.start_time) / duration)
 
     def advance(self) -> None:
         self.clock.advance()
